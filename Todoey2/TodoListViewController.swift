@@ -10,6 +10,8 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
+    let defaults = UserDefaults.standard
+    
     var itemArray = ["Buy Floss", "Buy Bread","Buy cologn"]
     
     
@@ -17,6 +19,10 @@ class TodoListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        if let items = defaults.array(forKey: "TodoLlistArray") as? [String] {
+            itemArray = items
+        }
+        
         
     }
 
@@ -64,13 +70,15 @@ class TodoListViewController: UITableViewController {
             print("Success")
             if textField.text == "" {
                 let emptyTextFieldAlert = UIAlertController(title: "Text field is empty!", message: "Please write an item in the text field!", preferredStyle: .alert)
-                let emptyTextFieldAction = UIAlertAction(title: "OK", style: .default, handler: { (actionForEmptyTextField) in
+                let emptyTextFieldAction = UIAlertAction(title: "OK", style: .default) { (emptyTextFieldAction) in
                     emptyTextFieldAlert.dismiss(animated: true, completion: nil)
-                })
+                }
                 emptyTextFieldAlert.addAction(emptyTextFieldAction)
                self.present(emptyTextFieldAlert, animated: true, completion: nil)
             } else {
                 self.itemArray.append(textField.text!)
+                self.defaults.set(self.itemArray, forKey: "TodoLlistArray")
+                
                 self.tableView.reloadData()
             }
             
