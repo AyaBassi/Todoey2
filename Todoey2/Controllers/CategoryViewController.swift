@@ -7,11 +7,11 @@
 //
 
 import UIKit
-// import CoreData
 import RealmSwift
+import ChameleonFramework
 
 
-class CategoryViewController: UITableViewController {
+class CategoryViewController: SwipeTableViewController{
 
     let realm = try! Realm()
     var categoryArray: Results<Category>?
@@ -22,24 +22,40 @@ class CategoryViewController: UITableViewController {
         super.viewDidLoad()
 
         loadCategories()
+        
+        tableView.separatorStyle = .none
+      
     }
     
 // MARK: - TableView DataSource Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return categoryArray?.count ?? 1
     }
+
+    
+    
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
-        
-        
-        cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categories Added yet"
-        
+        if let category = categoryArray?[indexPath.row]{
+             cell.textLabel?.text = category.name
+            
+            guard let categoryColour = UIColor(hexString:category.randCelColHexCodeInStr) else {fatalError()}
+            
+                cell.backgroundColor = categoryColour
+            
+            cell.textLabel?.textColor = ContrastColorOf(categoryColour, returnFlat: true)
+            
+        }
+       
         return cell
     }
     
     
 //MARK: - Data Manipulation Methods
+
     
     func save(category: Category){
         do{
@@ -55,15 +71,29 @@ class CategoryViewController: UITableViewController {
     
     
     func loadCategories(){
+        
         categoryArray = realm.objects(Category.self)
-//        let request : NSFetchRequest<Category> = Category.fetchRequest()
-//        do{
-//            categoryArray = try context.fetch(request)
-//        }catch{
-//            print("error fetching data from context")
-//        }
-       tableView.reloadData()
+        
+        tableView.reloadData()
     }
+    
+    // MARK: - Delete Data from Swipe
+    
+    override func updateModel(at indexPath: IndexPath) {
+        
+        if let categoryForDeletion = self.categoryArray?[indexPath.row]{
+            do{
+                try self.realm.write {
+                    self.realm.delete(categoryForDeletion)
+                }
+            } catch {
+                print("error deleting category \(error)")
+
+            }
+        }
+    }
+    
+    
     
 //MARK: - Add new categories
     
@@ -85,6 +115,7 @@ class CategoryViewController: UITableViewController {
                 
                 let newCategory = Category()
                 newCategory.name = textField.text!
+                newCategory.randCelColHexCodeInStr = UIColor.randomFlat.hexValue()
                
                 self.save(category: newCategory)
             }
@@ -115,3 +146,4 @@ class CategoryViewController: UITableViewController {
     
     
 }
+
